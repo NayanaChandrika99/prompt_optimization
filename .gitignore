@@ -1,0 +1,22 @@
+# Bytecode
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+env/
+venv/
+
+# Tooling caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.DS_Store
+
+# Coverage and reports
+.coverage
+htmlcov/
+
+# Secrets
+.env
+*.md

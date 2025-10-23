@@ -24,7 +24,7 @@ pip install -r requirements.txt
 ```bash
 cp .env.example .env
 # Edit .env and set at minimum:
-# ANTHROPIC_API_KEY, DATABASE_URL
+# DATABASE_URL, TOGETHER_API_KEY, VOICE_AGENT_BASE_URL, GEPA_OPTIMIZER_BASE_URL
 ```
 
 3) Start core services
@@ -42,7 +42,7 @@ curl http://localhost:5000          # Dashboard
 
 ## Project Structure
 ```
-voice-ai-keep-gepa/
+voice_ai_keep_gepa/
 ├── voice_agent/           # DSPy voice AI agent modules
 ├── gepa_optimizer/        # GEPA optimization service (Flask API)
 ├── dashboard/             # Monitoring dashboard (Flask + Chart.js)

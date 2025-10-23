@@ -1,0 +1,71 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: voiceai-postgres
+    environment:
+      POSTGRES_USER: voiceai
+      POSTGRES_PASSWORD: voiceai
+      POSTGRES_DB: voiceai
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  voice-agent:
+    build:
+      context: .
+      dockerfile: voice_ai_keep_gepa/docker/voice_agent.Dockerfile
+    command: python voice_ai_keep_gepa/voice_agent/app.py
+    ports:
+      - "${VOICE_AGENT_PORT:-5100}:5100"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://voiceai:voiceai@postgres:5432/voiceai}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./voice_ai_keep_gepa:/app/voice_ai_keep_gepa
+
+  gepa-optimizer:
+    build:
+      context: .
+      dockerfile: voice_ai_keep_gepa/docker/gepa_optimizer.Dockerfile
+    command: python voice_ai_keep_gepa/gepa_optimizer/service.py
+    ports:
+      - "${GEPA_OPTIMIZER_PORT:-8000}:8000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://voiceai:voiceai@postgres:5432/voiceai}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./voice_ai_keep_gepa:/app/voice_ai_keep_gepa
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: voice_ai_keep_gepa/docker/dashboard.Dockerfile
+    command: python voice_ai_keep_gepa/dashboard/app.py
+    ports:
+      - "${DASHBOARD_PORT:-5000}:5000"
+    env_file:
+      - .env
+    depends_on:
+      - voice-agent
+      - gepa-optimizer
+    volumes:
+      - ./voice_ai_keep_gepa:/app/voice_ai_keep_gepa
+
+volumes:
+  postgres-data:

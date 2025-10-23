@@ -1,0 +1,25 @@
+[project]
+name = "voice_ai_keep_gepa"
+version = "0.1.0"
+description = "Self-healing voice AI stack with GEPA optimizer and optional Keep integration."
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "S", "N", "W"]
+ignore = ["S101"]  # allow asserts in tests
+fixable = ["ALL"]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra --strict-markers"
+testpaths = ["voice_ai_keep_gepa/tests"]

@@ -1,0 +1,23 @@
+{
+  "no_slots": [
+    "Offer to add the customer to a cancellation waitlist",
+    "Suggest alternative times proactively",
+    "Empathise with slot unavailability and explain next steps"
+  ],
+  "customer_disengaged": [
+    "Acknowledge frustration and provide sincere apology",
+    "Offer to follow up by text or email to keep the conversation open"
+  ],
+  "service_package": [
+    "Provide clear, transparent package contents",
+    "Offer to email detailed service brochures"
+  ],
+  "billing": [
+    "Provide warm hand-off to billing department",
+    "Offer to schedule a callback with billing specialist"
+  ],
+  "general": [
+    "Keep tone friendly, confident, and concise",
+    "Reinforce dealership value propositions"
+  ]
+}

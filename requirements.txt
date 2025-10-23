@@ -1,0 +1,13 @@
+# Core services
+flask>=3.0.0
+sqlalchemy>=2.0.27
+psycopg[binary]>=3.1.18
+dspy-ai>=2.4.0
+requests>=2.32.0
+python-dotenv>=1.0.0
+
+# Tooling & testing
+pytest>=8.0.0
+pytest-cov>=4.1.0
+pytest-mock>=3.12.0
+ruff>=0.3.0

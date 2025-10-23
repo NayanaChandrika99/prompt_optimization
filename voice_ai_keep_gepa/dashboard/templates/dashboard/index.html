@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Voice AI Health Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: "Segoe UI", Roboto, sans-serif;
+      }
+      body {
+        margin: 0;
+        padding: 0 1.5rem 3rem;
+        background: #0f172a;
+        color: #e2e8f0;
+        min-height: 100vh;
+      }
+      header {
+        padding: 2rem 0 1rem;
+      }
+      header h1 {
+        margin: 0;
+        font-size: 2.25rem;
+      }
+      header p {
+        margin: 0.25rem 0 0;
+        color: #cbd5f5;
+      }
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+      .card {
+        background: rgba(30, 41, 59, 0.8);
+        padding: 1rem 1.25rem;
+        border-radius: 0.875rem;
+        box-shadow: 0 14px 24px rgba(15, 23, 42, 0.35);
+      }
+      .card h2 {
+        margin: 0;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08rem;
+        color: #94a3b8;
+      }
+      .card strong {
+        display: block;
+        margin-top: 0.5rem;
+        font-size: 1.75rem;
+        color: #f8fafc;
+      }
+      .section {
+        margin-bottom: 2.5rem;
+      }
+      .section h2 {
+        font-size: 1.4rem;
+        margin-bottom: 0.75rem;
+      }
+      canvas {
+        background: rgba(15, 23, 42, 0.65);
+        border-radius: 0.75rem;
+        padding: 1rem;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: rgba(15, 23, 42, 0.65);
+        border-radius: 0.75rem;
+        overflow: hidden;
+      }
+      th, td {
+        padding: 0.75rem 1rem;
+        text-align: left;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+      }
+      th {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05rem;
+        color: #94a3b8;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      .status {
+        margin: 0.5rem 0 1.5rem;
+        font-size: 0.9rem;
+        color: #38bdf8;
+      }
+      .prompt-list {
+        display: grid;
+        gap: 0.75rem;
+      }
+      .prompt-item {
+        background: rgba(15, 23, 42, 0.65);
+        border-radius: 0.75rem;
+        padding: 1rem;
+        border: 1px solid rgba(59, 130, 246, 0.25);
+      }
+      .prompt-item code {
+        display: block;
+        white-space: pre-wrap;
+        margin-top: 0.75rem;
+        background: rgba(30, 41, 59, 0.8);
+        padding: 0.75rem;
+        border-radius: 0.6rem;
+        font-size: 0.9rem;
+      }
+      @media (max-width: 768px) {
+        body { padding: 0 1rem 2.5rem; }
+        header h1 { font-size: 1.75rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Voice AI Health Dashboard</h1>
+      <p>View live call performance, optimisation activity, and current prompt versions. Auto-refreshing every 30 seconds.</p>
+      <div class="status" id="statusText"></div>
+    </header>
+
+    <section class="summary-grid">
+      <div class="card">
+        <h2>Total Calls</h2>
+        <strong id="totalCalls">0</strong>
+      </div>
+      <div class="card">
+        <h2>Conversion Rate</h2>
+        <strong id="conversionRate">0%</strong>
+      </div>
+      <div class="card">
+        <h2>Active Prompt</h2>
+        <strong id="activePrompt">–</strong>
+      </div>
+      <div class="card">
+        <h2>GEPA Runs</h2>
+        <strong id="gepaRuns">0</strong>
+      </div>
+      <div class="card">
+        <h2>Avg Improvement</h2>
+        <strong id="avgImprovementScore">0</strong>
+      </div>
+      <div class="card">
+        <h2>Objective Coverage</h2>
+        <strong id="avgObjectiveCoverage">0%</strong>
+      </div>
+      <div class="card">
+        <h2>Conversion Δ</h2>
+        <strong id="avgConversionDelta">0%</strong>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Conversion Trend</h2>
+      <canvas id="conversionChart" height="140"></canvas>
+    </section>
+
+    <section class="section">
+      <h2>Failure Reasons</h2>
+      <canvas id="failureChart" height="140"></canvas>
+    </section>
+
+    <section class="section">
+      <h2>Recent Optimisation Runs</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Status</th>
+            <th>Model</th>
+            <th>Improvement</th>
+            <th>Conversion Δ</th>
+            <th>Objective Coverage</th>
+            <th>Duration (s)</th>
+            <th>Timestamp</th>
+          </tr>
+        </thead>
+        <tbody id="runsTableBody">
+          <tr><td colspan="8">No optimisation runs yet.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="section">
+      <h2>Prompt Versions</h2>
+      <div class="prompt-list" id="promptList">
+        <div class="prompt-item">
+          <strong>No prompt versions available yet.</strong>
+          <p>Run an optimisation to see the latest prompt text here.</p>
+        </div>
+      </div>
+    </section>
+
+    <script>
+      const REFRESH_INTERVAL_MS = 30000;
+      const initialData = {{ initial_data|safe }};
+      let conversionChart;
+      let failureChart;
+
+      const numberFormatter = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });
+      const percentFormatter = new Intl.NumberFormat(undefined, { style: 'percent', maximumFractionDigits: 1 });
+
+      function updateStatus(message, isError = false) {
+        const el = document.getElementById('statusText');
+        el.textContent = message || '';
+        el.style.color = isError ? '#f87171' : '#38bdf8';
+      }
+
+      function buildConversionSeries(recentCalls) {
+        const labels = [];
+        const series = [];
+        let successes = 0;
+        recentCalls.forEach((call, index) => {
+          const timestamp = call.timestamp ? new Date(call.timestamp) : new Date();
+          labels.push(timestamp.toLocaleTimeString());
+          if (call.success) successes += 1;
+          const rate = successes / (index + 1);
+          series.push(Number(rate.toFixed(3)));
+        });
+        return { labels, series };
+      }
+
+      function renderSummary(data) {
+        const vm = data.voice_metrics || {};
+        const gm = data.gepa_metrics || {};
+        const breakdown = gm.score_breakdown || {};
+        document.getElementById('totalCalls').textContent = numberFormatter.format(vm.total_calls || 0);
+        document.getElementById('conversionRate').textContent = percentFormatter.format(vm.conversion_rate || 0);
+        document.getElementById('activePrompt').textContent = gm.active_prompt_version || '–';
+        document.getElementById('gepaRuns').textContent = numberFormatter.format(gm.total_runs || 0);
+        const avgImprovementEl = document.getElementById('avgImprovementScore');
+        if (avgImprovementEl) {
+          const totalScore = typeof breakdown.total === 'number' ? breakdown.total : 0;
+          avgImprovementEl.textContent = numberFormatter.format(totalScore);
+        }
+        const avgObjectiveCoverageEl = document.getElementById('avgObjectiveCoverage');
+        if (avgObjectiveCoverageEl) {
+          const coverage = typeof breakdown.objective_coverage_ratio === 'number' ? breakdown.objective_coverage_ratio : 0;
+          avgObjectiveCoverageEl.textContent = percentFormatter.format(coverage);
+        }
+        const avgConversionDeltaEl = document.getElementById('avgConversionDelta');
+        if (avgConversionDeltaEl) {
+          const delta = typeof breakdown.conversion_delta_rate === 'number' ? breakdown.conversion_delta_rate : 0;
+          avgConversionDeltaEl.textContent = percentFormatter.format(delta);
+        }
+      }
+
+      function renderConversionChart(data) {
+        const ctx = document.getElementById('conversionChart').getContext('2d');
+        const recentCalls = data.voice_metrics?.recent_calls || [];
+        const { labels, series } = buildConversionSeries(recentCalls);
+        const chartData = {
+          labels: labels.length ? labels : ['No data'],
+          datasets: [{
+            label: 'Conversion Rate',
+            data: series.length ? series : [0],
+            borderColor: '#38bdf8',
+            backgroundColor: 'rgba(56, 189, 248, 0.25)',
+            tension: 0.3,
+            fill: true,
+          }],
+        };
+        if (conversionChart) {
+          conversionChart.data = chartData;
+          conversionChart.update();
+        } else {
+          conversionChart = new Chart(ctx, {
+            type: 'line',
+            data: chartData,
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                y: { beginAtZero: true, suggestedMax: 1 },
+              },
+            },
+          });
+        }
+      }
+
+      function renderFailureChart(data) {
+        const ctx = document.getElementById('failureChart').getContext('2d');
+        const failureReasons = data.voice_metrics?.failure_reasons || {};
+        const labels = Object.keys(failureReasons);
+        const values = labels.map((label) => failureReasons[label]);
+        const palette = ['#f97316', '#facc15', '#34d399', '#38bdf8', '#a855f7', '#f472b6'];
+        const chartData = {
+          labels: labels.length ? labels : ['No failures'],
+          datasets: [{
+            label: 'Failures',
+            data: values.length ? values : [1],
+            backgroundColor: labels.length ? palette.slice(0, labels.length) : ['rgba(148, 163, 184, 0.35)'],
+          }],
+        };
+        if (failureChart) {
+          failureChart.data = chartData;
+          failureChart.update();
+        } else {
+          failureChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: chartData,
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+            },
+          });
+        }
+      }
+
+      function renderRunsTable(data) {
+        const tbody = document.getElementById('runsTableBody');
+        tbody.innerHTML = '';
+        const runs = data.gepa_metrics?.recent_runs || [];
+        runs.forEach((run, index) => {
+          const row = document.createElement('tr');
+          const ts = run.created_at ? new Date(run.created_at).toLocaleString() : '—';
+          const breakdown = run.score_components || {};
+          const improvementValue = (run.improvement !== null && run.improvement !== undefined)
+            ? numberFormatter.format(run.improvement)
+            : '—';
+          const conversionDeltaValue = typeof breakdown.conversion_delta_rate === 'number'
+            ? percentFormatter.format(breakdown.conversion_delta_rate)
+            : '—';
+          const objectiveCoverageValue = typeof breakdown.objective_coverage_ratio === 'number'
+            ? percentFormatter.format(breakdown.objective_coverage_ratio)
+            : '—';
+          row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${run.status || '—'}</td>
+            <td>${run.model || '—'}</td>
+            <td>${improvementValue}</td>
+            <td>${conversionDeltaValue}</td>
+            <td>${objectiveCoverageValue}</td>
+            <td>${run.duration_seconds !== null && run.duration_seconds !== undefined ? numberFormatter.format(run.duration_seconds) : '—'}</td>
+            <td>${ts}</td>
+          `;
+          tbody.appendChild(row);
+        });
+        if (!runs.length) {
+          const row = document.createElement('tr');
+          row.innerHTML = '<td colspan="8">No optimisation runs recorded yet.</td>';
+          tbody.appendChild(row);
+        }
+      }
+
+      function renderPrompts(prompts) {
+        const container = document.getElementById('promptList');
+        container.innerHTML = '';
+        if (!prompts.length) {
+          const empty = document.createElement('div');
+          empty.className = 'prompt-item';
+          empty.innerHTML = '<strong>No prompt versions available yet.</strong><p>Run an optimisation to see the latest prompt text here.</p>';
+          container.appendChild(empty);
+          return;
+        }
+        prompts.forEach((prompt) => {
+          const item = document.createElement('div');
+          item.className = 'prompt-item';
+          const created = prompt.created_at ? new Date(prompt.created_at).toLocaleString() : '—';
+          item.innerHTML = `
+            <div><strong>Version ${prompt.version}${prompt.is_active ? ' (active)' : ''}</strong></div>
+            <small>${created}</small>
+            ${prompt.notes ? `<p>${prompt.notes}</p>` : ''}
+            <code>${(prompt.preview || prompt.content || '').slice(0, 600)}</code>
+          `;
+          container.appendChild(item);
+        });
+      }
+
+      function renderDashboard(data) {
+        renderSummary(data);
+        renderConversionChart(data);
+        renderFailureChart(data);
+        renderRunsTable(data);
+        renderPrompts(data.prompts || []);
+      }
+
+      async function refreshDashboard() {
+        try {
+          const response = await fetch('/api/dashboard');
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const data = await response.json();
+          renderDashboard(data);
+          updateStatus(`Last updated ${new Date().toLocaleTimeString()}`);
+        } catch (error) {
+          console.error('Failed to refresh dashboard', error);
+          updateStatus('Unable to refresh dashboard data. Retrying…', true);
+        }
+      }
+
+      renderDashboard(initialData);
+      updateStatus(`Initial load ${new Date().toLocaleTimeString()}`);
+      setInterval(refreshDashboard, REFRESH_INTERVAL_MS);
+    </script>
+  </body>
+</html>
