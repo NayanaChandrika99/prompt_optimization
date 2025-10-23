@@ -70,16 +70,6 @@ Place new modules at `<service>/<feature>.py` with tests at `tests/<service>/tes
 - `python gepa_optimizer/service.py` – run GEPA locally
 - `python voice_agent/simulate_calls.py` – simulate calls
 
-## Keep Integration (Optional)
-1) Start Keep: `docker-compose up -d keep`
-2) Open UI: http://localhost:3000
-3) In UI: add webhook provider, import workflows from `keep_integration/workflows/`, and connect GEPA webhook
-4) Test webhook:
-```bash
-curl -X POST http://localhost:8000/webhook/keep \
-  -H "Content-Type: application/json" \
-  -d '{"alert":"conversion_drop","rate":0.55}'
-```
 
 ## Testing
 - Framework: pytest + coverage
